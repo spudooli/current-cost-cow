@@ -1,0 +1,4 @@
+Reads data from a Current Cost meter
+Removes the history date becasue it's basically useless
+Updates a mysql database
+Changes the color of an Ambient Orb to rreflect how much electricity we be using
