@@ -1,4 +1,11 @@
-Reads data from a Current Cost meter
-Removes the history date becasue it's basically useless
+
+Current Cost Cow is a PyGTK app to display realtime data from a Current Cost Meter
+
+Meter Reading does exactly the same thing only is a text console app.
+
+Both do the following:
+
+Reads meter data from a Current Cost meter
+Removes the history data because it's basically useless
 Updates a mysql database
-Changes the color of an Ambient Orb to rreflect how much electricity we be using
+Changes the color of an Ambient Orb to reflect how much electricity we be using
