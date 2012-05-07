@@ -4,6 +4,7 @@ import gobject, gtk
 import serial
 import MySQLdb
 import re
+import gobject
  
 dbName = "spudooli"
 tblName = "power"
@@ -48,16 +49,14 @@ class MainWindow(gtk.Window):
        self.show_all()
    
    def on_swButton_clicked(self, button):
-       threading.Thread(target=self.getSerial, args=(button,)).start()
-       print "Got to heere"
-       self.addTextToWidget("DEBUG:")
-       self.getSerial(button)
+       threading.Thread(target=self.getSerial).start()
+       #print "Got to heere"
+       #self.addTextToWidget("DEBUG:")
+       #self.getSerial(button)
    
-   def getSerial(self, button):
-       print "And got to heere"
-       gtk.gdk.threads_enter()
+   def getSerial(self):
        self.changeorb("red")
-       gtk.gdk.threads_leave()
+       self.addTextToWidget("DEBUG:")
        #while 1: 
          #readings = self.serial.readline()#.strip().split(' ') # the readings are separated by space
          
@@ -68,10 +67,8 @@ class MainWindow(gtk.Window):
         # else: 
             # self.addTextToWidget("DEBUG: " + readings.strip())
    def addTextToWidget(self, newText):
-          gtk.gdk.threads_enter()
           print "but to here?"
           self.textview.get_buffer().insert(self.textview.get_buffer().get_start_iter(), newText) 
-          gtk.gdk.threads_leave()
     
    def changeorb(self,  color):
        global orbsetcolor
@@ -80,13 +77,13 @@ class MainWindow(gtk.Window):
           print "color is already "+color+" so did nothing"
         else:
           print "Setting orb to "+color
-          orb.write('~A 8')
+          self.orb.write('~A 8')
        elif color == "red":
         if color is orbsetcolor:
           print "color is already "+color+" so did nothing"
         else:
           self.addTextToWidget("Setting orb to "+color)
-          orb.write('~A  ')
+          self.orb.write('~A  ')
        elif color == "orange":
         if color is orbsetcolor:
           print "color is already "+color+" so did nothing"
