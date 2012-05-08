@@ -1,5 +1,3 @@
-#http://www.daniweb.com/software-development/python/threads/265625/stuck-gui-with-pygtk-and-threads
-
 import threading, thread
 import gobject, gtk
 import serial
@@ -12,11 +10,7 @@ tblName = "power"
 uName = "root"
 pswd = "bobthefish"
 
-hotwater = ""
-wholehouse = ""
-orbcolor = ""
-orbsetcolor = ""
-
+orbsetcolor = "blue"
 
 class MainWindow(gtk.Window):
    
@@ -50,22 +44,62 @@ class MainWindow(gtk.Window):
    
    def on_swButton_clicked(self, button):
        threading.Thread(target=self.getSerial).start()
-       #print "Got to heere"
-       #self.addTextToWidget("DEBUG:")
-       #self.getSerial(button)
    
    def getSerial(self):
-       self.changeorb("red")
-       #self.addTextToWidget("DEBUG:\n")
-       #while 1: 
-         #readings = self.serial.readline()#.strip().split(' ') # the readings are separated by space
-         
-         #if (readings.find('%M')!=-1):
-            # readings = readings.strip().split(' ')
-            # if (len(readings) == 10):
-               # self.addTextToWidget(getTime() + ": " + "CO2:" + readings[1] + " Temp:" +readings[2] + " Light:" +readings[3] + " FAN:" +readings[4] + " CO2ON:" + readings[5] + " CO2LOSS:" + readings[6] + " CO2INJ:" + readings[7] + " HighBias:" + str(int(readings[8]) -200) + " LowBias:" + readings[9])
-        # else: 
-            # self.addTextToWidget("DEBUG: " + readings.strip())
+       hotwater = ""
+       wholehouse = ""
+       orbcolor = ""
+       orbsetcolor = ""
+       prevWatts = 0
+       db=MySQLdb.connect(user=uName, passwd=pswd,db=dbName)
+       self.c = db.cursor()
+       self.ser = serial.Serial(port='/dev/ttyUSB0', baudrate=57600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS )
+       self.orb = serial.Serial(port='/dev/ttyS4', baudrate=19200, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS )
+       while 1:
+         line=""
+         line = self.ser.readline()   #read a '\n' terminated line
+         if line[65:69] == "hist":
+            print "oops, thats the history output, ignoring"
+         else:
+            #print "running the thing"
+            reading = re.search('.*<sensor>([0-9])</sensor><id>([0-9][0-9][0-9][0-9][0-9])</id><type>1</type><ch1><watts>[0]*([0-9][0-9]*).*',line)
+            print reading
+            n = re.search('.*<time>([0-9][0-9]):([0-9][0-9]):([0-9][0-9]).*',line)
+            #if reading is not None:
+            sensor = reading.group(1)
+            sensorid = reading.group(2)
+            watts = reading.group(3)
+            hours = n.group(1)
+            mins = n.group(2)
+            secs = n.group(3)
+
+            if sensor == "0":
+              wholehouse = watts
+              #deltaW = int(wholehouse) - int(prevWatts)
+              prevWatts = int(wholehouse)
+              if int(wholehouse) < 1000:
+                self.changeorb("green")
+              elif int(wholehouse) > 2000:
+                self.changeorb("red")
+              elif int(wholehouse) > 1000:
+                self.changeorb("orange")
+              else:  
+                print "something didn't happen"
+
+              #prints individual readings, so you can check it is working
+              self.addTextToWidget("Whole house = "+wholehouse+"W ")
+              self.addTextToWidget( hours+":"+mins+":"+secs)
+              self.addTextToWidget( " Hot water = "+hotwater+"W\n")
+
+              self.c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
+              
+              # Open a file
+              fo = open("/var/www/spudooli/power.txt", "w")
+              fo.write(wholehouse+","+hotwater);
+              fo.close()
+
+            if sensor == "1":
+              hotwater = watts
    
    def addTextToWidget(self, newText):
        self.textview.get_buffer().insert(self.textview.get_buffer().get_start_iter(), newText) 
