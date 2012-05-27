@@ -2,11 +2,15 @@
 import serial
 import re
 import MySQLdb
+import subprocess
+from rrdtool import update as rrd_update
+
+
 
 dbName = "spudooli"
 tblName = "power"
 uName = "root"
-pswd = "XXXXXXXXXXXXXX"
+pswd = "bobthefish"
 
 
 hotwater = ""
@@ -106,10 +110,18 @@ while 1:
 			print "Hot water = "+hotwater+"W"
 			c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
 
-			# Open a file
+      #do the rrd thing
+      #systemcmd = "rrdtool update current-cost-cow.rrd N:"+wholehouse+":"+hotwater
+      #print systemcmd
+      #subprocess.call(['rrdtool', 'update', 'current-cost-cow.rrd', 'N:', wholehouse, ':', hotwater, shell=False])
+      #ret = rrd_update('current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
+
+
+			ret = rrd_update('current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
 			fo = open("/var/www/spudooli/power.txt", "w")
 			fo.write(wholehouse+","+hotwater);
 			fo.close()
+      #ret = rrd_update('current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
 
 
 		if sensor == "1":
