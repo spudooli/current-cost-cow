@@ -1,5 +1,5 @@
 
-Current Cost Cow is a PyGTK app to display realtime data from a Current Cost Meter
+Current Cost Cow is a TKinter app to display realtime data from a Current Cost Meter
 
 Meter Reading does exactly the same thing only is a text console app.
 
