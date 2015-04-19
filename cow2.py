@@ -25,29 +25,30 @@ def changeorb( color ):
   orb.write('G+')
   if color == "blue":
     if color is orbsetcolor:
-      print "color is already "+color+" so did nothing"
+      statusbarvar.set("color is already "+color+" so did nothing")
     else:
-      print "Setting orb to "+color
+      statusbarvar.set("Setting orb to "+color)
       orb.write('~A 8')
   elif color == "red":
     if color is orbsetcolor:
-      print "color is already "+color+" so did nothing"
+      statusbarvar.set("color is already "+color+" so did nothing")
     else:
-      print "Setting orb to "+color
+      statusbarvar.set("Setting orb to "+color)
       orb.write('~A  ')
   elif color == "orange":
     if color is orbsetcolor:
-      print "color is already "+color+" so did nothing"
+      statusbarvar.set("color is already "+color+" so did nothing")
     else:
-      print "Setting orb to "+color
+      statusbarvar.set("Setting orb to "+color)
       orb.write('~A "')
   elif color == "green":
     if color is orbsetcolor:
-      print "color is already "+color+" so did nothing"
+      statusbarvar.set("color is already "+color+" so did nothing")
     else:
-      print "Setting orb to "+color
+      statusbarvar.set("Setting orb to "+color)
       orb.write('~A ,')
   orbsetcolor = color
+  root.update_idletasks()
   return
 
 ser = serial.Serial(
@@ -85,12 +86,15 @@ class GuiPart:
             frame, text="QUIT", fg="red", command=frame.quit
             )
         self.button.pack(side=LEFT)
-        self.housewattslabel = Label(root, textvariable = wholehousevar)
+        self.housewattslabel = Label(root, textvariable = wholehousevar, font=("Helvetica", 22))
         self.housewattslabel.pack()
 
-        self.orbcolourlabel = Label(root, text=" ")
+        self.orbcolourlabel = Label(root, textvariable = hotwatervar, font=("Helvetica", 22))
         self.orbcolourlabel.pack()
         # Add more GUI stuff here
+
+        self.status = Label(master, textvariable = statusbarvar, bd=1, relief=SUNKEN, anchor=W)
+        self.status.pack(side=BOTTOM, fill=X)
 
     def processIncoming(self):
         """
@@ -101,20 +105,19 @@ class GuiPart:
                 msg = self.queue.get(0)
                 # Check contents of message and do what it says
                 # As a test, we simply print it
-                print msg
                 hotwater = ""
                 wholehouse = ""
                 orbcolor = ""
                 orbsetcolor = ""
                 if msg[65:69] == "hist":
-                    print "oops, thats the history output, ignoring"
+                    statusbarvar.set("oops, thats the history output, ignoring")
+                    root.update_idletasks()
                 else:
                     reading = re.search('.*<sensor>([0-9])</sensor><id>([0-9][0-9][0-9][0-9][0-9])</id><type>1</type><ch1><watts>[0]*([0-9][0-9]*).*',msg)
                     #print reading
                     sensor = reading.group(1)
                     sensorid = reading.group(2)
                     watts = reading.group(3)
-                    root.update()
 
                 if sensor == "0":
                     wholehouse = watts
@@ -132,9 +135,10 @@ class GuiPart:
                     #prints individual readings, so you can check it is working
                     #print "Whole house = "+wholehouse+"W"
                     wholehousevar.set(wholehouse)
-                    print wholehouse
-                    root.update_idletasks()
+                                        
                     #print "Hot water = "+hotwater+"W"
+                    hotwatervar.set(hotwater)
+                    root.update_idletasks()
                     c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
 
                     ret = rrd_update('/var/www/scripts/current-cost-cow/current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
@@ -213,6 +217,10 @@ root.title("Current Cost Cow")
 root.geometry("300x200+5+5")
 wholehousevar = StringVar()
 wholehousevar.set('----')
+hotwatervar = StringVar()
+hotwatervar.set('----')
+statusbarvar = StringVar()
+statusbarvar.set(' ')
 client = ThreadedClient(root)
 root.mainloop()
 root.destroy() # optional; see description below
