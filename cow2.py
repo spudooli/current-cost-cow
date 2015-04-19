@@ -19,7 +19,6 @@ hotwater = ""
 wholehouse = ""
 orbcolor = ""
 orbsetcolor = ""
-wholehousevar = ""
 
 def changeorb( color ):
   global orbsetcolor
@@ -86,8 +85,7 @@ class GuiPart:
             frame, text="QUIT", fg="red", command=frame.quit
             )
         self.button.pack(side=LEFT)
-
-        self.housewattslabel = Label(root, textvariable=wholehousevar)
+        self.housewattslabel = Label(root, textvariable = wholehousevar)
         self.housewattslabel.pack()
 
         self.orbcolourlabel = Label(root, text=" ")
@@ -133,8 +131,9 @@ class GuiPart:
 
                     #prints individual readings, so you can check it is working
                     #print "Whole house = "+wholehouse+"W"
-                    self.housewattslabel = Label(root, textvariable=wholehouse)
-                    self.housewattslabel.pack()
+                    wholehousevar.set(wholehouse)
+                    print wholehouse
+                    root.update_idletasks()
                     #print "Hot water = "+hotwater+"W"
                     c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
 
@@ -211,6 +210,9 @@ class ThreadedClient:
 
 root = Tk()
 root.title("Current Cost Cow")
+root.geometry("300x200+5+5")
+wholehousevar = StringVar()
+wholehousevar.set('----')
 client = ThreadedClient(root)
 root.mainloop()
 root.destroy() # optional; see description below
