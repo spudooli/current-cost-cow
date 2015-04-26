@@ -15,8 +15,8 @@ tblName = "power"
 uName = "root"
 pswd = "bobthefish"
 
-global hotwater 
-global wholehouse 
+hotwater = ""
+wholehouse = ""
 orbcolor = ""
 orbsetcolor = ""
 
@@ -109,8 +109,8 @@ class GuiPart:
                 msg = self.queue.get(0)
                 # Check contents of message and do what it says
                 # As a test, we simply print it
-                #hotwater = ""
-                #wholehouse = ""
+                hotwater = ""
+                wholehouse = ""
                 orbcolor = ""
                 sensor = ""
                 orbsetcolor = ""
@@ -128,7 +128,7 @@ class GuiPart:
                     wholehouse = watts
                     #deltaW = int(wholehouse) - int(prevWatts)
                     prevWatts = int(wholehouse)
-                    if int(wholehouse) < 2499:
+                    if int(wholehouse) <= 2500:
                         changeorb("green")
                     elif int(wholehouse) > 3500:
                         changeorb("red")
@@ -140,7 +140,7 @@ class GuiPart:
                     #prints individual readings, so you can check it is working
                     #print "Whole house = "+wholehouse+"W"
                     wholehousevar.set(wholehouse)
-                                        
+                    root.update_idletasks()                    
                     c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
 
                     ret = rrd_update('/var/www/scripts/current-cost-cow/current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
