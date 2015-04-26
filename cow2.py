@@ -89,8 +89,8 @@ class GuiPart:
         self.housewattslabel = Label(root, textvariable = wholehousevar, font=("Helvetica", 22))
         self.housewattslabel.pack()
 
-        self.orbcolourlabel = Label(root, textvariable = hotwatervar, font=("Helvetica", 22))
-        self.orbcolourlabel.pack()
+        self.hotwaterlabel = Label(root, textvariable = hotwatervar, font=("Helvetica", 22))
+        self.hotwaterlabel.pack()
         # Add more GUI stuff here
 
         self.status = Label(master, textvariable = statusbarvar, bd=1, relief=SUNKEN, anchor=W)
@@ -101,6 +101,9 @@ class GuiPart:
         root.destroy() #This will kill the application itself, not the self frame.
 
     def processIncoming(self):
+
+        global hotwater
+        global wholehouse
         """
         Handle all the messages currently in the queue (if any).
         """
@@ -109,8 +112,8 @@ class GuiPart:
                 msg = self.queue.get(0)
                 # Check contents of message and do what it says
                 # As a test, we simply print it
-                hotwater = ""
-                wholehouse = ""
+                #hotwater
+                #wholehouse
                 orbcolor = ""
                 sensor = ""
                 orbsetcolor = ""
@@ -119,15 +122,12 @@ class GuiPart:
                     root.update_idletasks()
                 else:
                     reading = re.search('.*<sensor>([0-9])</sensor><id>([0-9][0-9][0-9][0-9][0-9])</id><type>1</type><ch1><watts>[0]*([0-9][0-9]*).*',msg)
-                    #print reading
                     sensor = reading.group(1)
                     sensorid = reading.group(2)
                     watts = reading.group(3)
 
                 if sensor == "0":
                     wholehouse = watts
-                    #deltaW = int(wholehouse) - int(prevWatts)
-                    prevWatts = int(wholehouse)
                     if int(wholehouse) <= 2500:
                         changeorb("green")
                     elif int(wholehouse) > 3500:
@@ -219,12 +219,16 @@ class ThreadedClient:
 root = Tk()
 root.title("Current Cost Cow")
 root.geometry("300x200+5+5")
+
 wholehousevar = StringVar()
 wholehousevar.set('----')
+
 hotwatervar = StringVar()
 hotwatervar.set('----')
+
 statusbarvar = StringVar()
 statusbarvar.set(' ')
+
 client = ThreadedClient(root)
 root.mainloop()
 root.master.destroy() # optional; see description below
