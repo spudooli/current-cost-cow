@@ -15,8 +15,8 @@ tblName = "power"
 uName = "root"
 pswd = "bobthefish"
 
-hotwater = ""
-wholehouse = ""
+global hotwater 
+global wholehouse 
 orbcolor = ""
 orbsetcolor = ""
 
@@ -25,25 +25,25 @@ def changeorb( color ):
   orb.write('G+')
   if color == "blue":
     if color is orbsetcolor:
-      statusbarvar.set("color is already "+color+" so did nothing")
+      statusbarvar.set("Orb is already "+color+" so did nothing")
     else:
       statusbarvar.set("Setting orb to "+color)
       orb.write('~A 8')
   elif color == "red":
     if color is orbsetcolor:
-      statusbarvar.set("color is already "+color+" so did nothing")
+      statusbarvar.set("Orb is already "+color+" so did nothing")
     else:
       statusbarvar.set("Setting orb to "+color)
       orb.write('~A  ')
   elif color == "orange":
     if color is orbsetcolor:
-      statusbarvar.set("color is already "+color+" so did nothing")
+      statusbarvar.set("Orb is already "+color+" so did nothing")
     else:
       statusbarvar.set("Setting orb to "+color)
       orb.write('~A "')
   elif color == "green":
     if color is orbsetcolor:
-      statusbarvar.set("color is already "+color+" so did nothing")
+      statusbarvar.set("Orb is already "+color+" so did nothing")
     else:
       statusbarvar.set("Setting orb to "+color)
       orb.write('~A ,')
@@ -83,7 +83,7 @@ class GuiPart:
         frame.pack()
 
         self.button = Button(
-            frame, text="QUIT", fg="red", command=frame.quit
+            frame, text="QUIT", fg="red", command=self.quit_pressed
             )
         self.button.pack(side=LEFT)
         self.housewattslabel = Label(root, textvariable = wholehousevar, font=("Helvetica", 22))
@@ -96,6 +96,10 @@ class GuiPart:
         self.status = Label(master, textvariable = statusbarvar, bd=1, relief=SUNKEN, anchor=W)
         self.status.pack(side=BOTTOM, fill=X)
 
+
+    def quit_pressed(self):
+        root.destroy() #This will kill the application itself, not the self frame.
+
     def processIncoming(self):
         """
         Handle all the messages currently in the queue (if any).
@@ -105,9 +109,10 @@ class GuiPart:
                 msg = self.queue.get(0)
                 # Check contents of message and do what it says
                 # As a test, we simply print it
-                hotwater = ""
-                wholehouse = ""
+                #hotwater = ""
+                #wholehouse = ""
                 orbcolor = ""
+                sensor = ""
                 orbsetcolor = ""
                 if msg[65:69] == "hist":
                     statusbarvar.set("oops, thats the history output, ignoring")
@@ -136,9 +141,6 @@ class GuiPart:
                     #print "Whole house = "+wholehouse+"W"
                     wholehousevar.set(wholehouse)
                                         
-                    #print "Hot water = "+hotwater+"W"
-                    hotwatervar.set(hotwater)
-                    root.update_idletasks()
                     c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
 
                     ret = rrd_update('/var/www/scripts/current-cost-cow/current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
@@ -148,7 +150,8 @@ class GuiPart:
 
                 if sensor == "1":
                     hotwater = watts
-                    root.update()
+                    hotwatervar.set(hotwater)
+                    root.update_idletasks()
             except Queue.Empty:
                 pass
 
@@ -212,6 +215,7 @@ class ThreadedClient:
     def endApplication(self):
         self.running = 0
 
+
 root = Tk()
 root.title("Current Cost Cow")
 root.geometry("300x200+5+5")
@@ -223,4 +227,4 @@ statusbarvar = StringVar()
 statusbarvar.set(' ')
 client = ThreadedClient(root)
 root.mainloop()
-root.destroy() # optional; see description below
+root.master.destroy() # optional; see description below
