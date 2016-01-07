@@ -1,19 +1,18 @@
 
 import serial
 import re
-import MySQLdb
+#import MySQLdb
 import subprocess
 from rrdtool import update as rrd_update
 
 
+#dbName = "spudooli"
+#tblName = "power"
+#uName = "root"
+#pswd = "bobthefish"
 
-dbName = "spudooli"
-tblName = "power"
-uName = "root"
-pswd = "bobthefish"
 
-
-hotwater = ""
+hotwater = "0"
 wholehouse = ""
 orbcolor = ""
 orbsetcolor = ""
@@ -21,6 +20,7 @@ orbsetcolor = ""
 
 def changeorb( color ):
    global orbsetcolor
+   orb.write('G+')
    if color == "blue":
    	if color is orbsetcolor:
    		print "color is already "+color+" so did nothing"
@@ -59,7 +59,7 @@ ser = serial.Serial(
 )
 
 orb = serial.Serial(
-                port='/dev/ttyS4',
+                port='/dev/ttyS5',
                 baudrate=19200,
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE,
@@ -68,54 +68,54 @@ orb = serial.Serial(
 
 
 
-db=MySQLdb.connect(user=uName, passwd=pswd,db=dbName)
+#db=MySQLdb.connect(user=uName, passwd=pswd,db=dbName)
 
-c = db.cursor()
+#c = db.cursor()
 prevWatts = 0
 deltaT = 0
 
 while 1:
         line=""
         line = ser.readline()   #read a '\n' terminated line
+	print line
 	if line[65:69] == "hist":
 		print "oops, thats the history output, ignoring"
 	else:
 		reading = re.search('.*<sensor>([0-9])</sensor><id>([0-9][0-9][0-9][0-9][0-9])</id><type>1</type><ch1><watts>[0]*([0-9][0-9]*).*',line)
 		#print reading
-		n = re.search('.*<time>([0-9][0-9]):([0-9][0-9]):([0-9][0-9]).*',line)
+		#n = re.search('.*<time>([0-9][0-9]):([0-9][0-9]):([0-9][0-9]).*',line)
 		#if reading is not None:
 		sensor = reading.group(1)
 		sensorid = reading.group(2)
 		watts = reading.group(3)
-		hours = n.group(1)
-		mins = n.group(2)
-		secs = n.group(3)
+		#hours = n.group(1)
+		#mins = n.group(2)
+		#secs = n.group(3)
 
 		if sensor == "0":
 			wholehouse = watts
 			#deltaW = int(wholehouse) - int(prevWatts)
 			prevWatts = int(wholehouse)
-			if int(wholehouse) < 1000:
+			if int(wholehouse) < 2499:
 				changeorb("green")
-			elif int(wholehouse) > 2000:
+			elif int(wholehouse) > 3500:
 				changeorb("red")
-			elif int(wholehouse) > 1000:
+			elif int(wholehouse) > 2500:
 				changeorb("orange")
 			else:
 				print "something didn't happen"
 
 			#prints individual readings, so you can check it is working
 			print "Whole house = "+wholehouse+"W"
-			print hours+":"+mins+":"+secs
+			#print hours+":"+mins+":"+secs
 			print "Hot water = "+hotwater+"W"
-			c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
+			#c.execute("INSERT INTO power (wholehouse, hotwater) VALUES (%s, %s)",(wholehouse, hotwater))
 
       #do the rrd thing
       #systemcmd = "rrdtool update current-cost-cow.rrd N:"+wholehouse+":"+hotwater
       #print systemcmd
       #subprocess.call(['rrdtool', 'update', 'current-cost-cow.rrd', 'N:', wholehouse, ':', hotwater, shell=False])
       #ret = rrd_update('current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
-
 
 			ret = rrd_update('current-cost-cow.rrd', 'N:%s:%s' %(wholehouse, hotwater));
 			fo = open("/var/www/spudooli/power.txt", "w")
@@ -125,4 +125,7 @@ while 1:
 
 
 		if sensor == "1":
-			hotwater = watts
+				if watts == "":
+					hotwater = "0"
+				else:
+					hotwater = watts
